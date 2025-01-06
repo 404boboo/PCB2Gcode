@@ -178,7 +178,7 @@ void PCB2Gcode::onPreviewTestPoints(){
         return;
     }
 
-    QList<TestPoint> testPoints = gerberManager->loadTestPoints(testPointsFile);
+    QList<TestPointCSV> testPoints = gerberManager->loadTestPoints(testPointsFile);
     if (testPoints.isEmpty()) {
         QMessageBox::critical(this, tr("Loading Test Points Failed"),
                               tr("An error occurred while loading test points from the CSV file. Please check the file format and contents."));
@@ -218,13 +218,13 @@ void PCB2Gcode::onGenerateFromCSV(){
     }
 
     // Filter and group test points
-    QList<TestPoint> topSidePoints = gcodeConverter->filterTopSidePoints();
+    QList<TestPointCSV> topSidePoints = gcodeConverter->filterTopSidePoints();
     if (topSidePoints.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("No top-side test points found in the file."));
         return;
     }
 
-    QMap<QString, QList<TestPoint>> groupedPoints = gcodeConverter->groupByNet(topSidePoints);
+    QMap<QString, QList<TestPointCSV>> groupedPoints = gcodeConverter->groupByNet(topSidePoints);
 
     QString gCode = gcodeConverter->generateGCodeFromCSV(groupedPoints);
 
