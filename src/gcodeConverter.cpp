@@ -28,7 +28,7 @@ bool GCodeConverter::loadCSVFile(const QString &filePath)
 
         if (parts.size() != 9) continue;
 
-        TestPoint tp;
+        TestPointCSV tp;
         tp.sourceRefDes = parts[0].remove('"');
         tp.sourcePad = parts[1].remove('"');
         tp.net = parts[2].remove('"');
@@ -46,10 +46,10 @@ bool GCodeConverter::loadCSVFile(const QString &filePath)
     return true;
 }
 
-QList<TestPoint> GCodeConverter::filterTopSidePoints() const
+QList<TestPointCSV> GCodeConverter::filterTopSidePoints() const
 {
-    QList<TestPoint> filtered;
-    for (const TestPoint &tp : testPoints) {
+    QList<TestPointCSV> filtered;
+    for (const TestPointCSV &tp : testPoints) {
         if (tp.side == "TOP") {
             filtered.append(tp);
         }
@@ -57,16 +57,16 @@ QList<TestPoint> GCodeConverter::filterTopSidePoints() const
     return filtered;
 }
 
-QMap<QString, QList<TestPoint>> GCodeConverter::groupByNet(const QList<TestPoint> &testPoints) const
+QMap<QString, QList<TestPointCSV>> GCodeConverter::groupByNet(const QList<TestPointCSV> &testPoints) const
 {
-    QMap<QString, QList<TestPoint>> grouped;
-    for (const TestPoint &tp : testPoints) {
+    QMap<QString, QList<TestPointCSV>> grouped;
+    for (const TestPointCSV &tp : testPoints) {
         grouped[tp.net].append(tp);
     }
     return grouped;
 }
 
-QString GCodeConverter::generateGCodeFromCSV(const QMap<QString, QList<TestPoint>> &groupedTestPoints) const
+QString GCodeConverter::generateGCodeFromCSV(const QMap<QString, QList<TestPointCSV>> &groupedTestPoints) const
 {
     QString gCode;
     gCode += "G21 ; Set units to millimeters\n";
@@ -75,7 +75,7 @@ QString GCodeConverter::generateGCodeFromCSV(const QMap<QString, QList<TestPoint
     for (const QString &net : groupedTestPoints.keys()) {
         gCode += QString("; Net: %1\n").arg(net);
 
-        for (const TestPoint &tp : groupedTestPoints[net]) {
+        for (const TestPointCSV &tp : groupedTestPoints[net]) {
             gCode += QString("G0 X%1 Y%2 ; Move to test point\n").arg(tp.x).arg(tp.y);
             gCode += "G1 Z-1 ; Lower probe\n";
             gCode += "G1 Z1 ; Raise probe\n";
@@ -86,18 +86,19 @@ QString GCodeConverter::generateGCodeFromCSV(const QMap<QString, QList<TestPoint
     return gCode;
 }
 
-bool GCodeConverter::extractPadCoords()
+bool GCodeConverter::extractPadInfo()
 {
-    padCoords = gerberManager->getPadCoordinates();
+    padInfo = gerberManager->getPadInfo();
 
-    if (padCoords.empty()) {
+    if (padInfo.empty()) {
         qWarning() << "No pad coordinates extracted.";
         return false;
     }
 
     qDebug() << "Extracted pad coordinates successfully:";
-    for (const auto& coord : padCoords) {
-        qDebug() << "XY:(" << coord.x << ", " << coord.y << "), Aperture: " << coord.aperture;
+    for (const auto& info : padInfo) {
+        qDebug() << "Aperture: " <<  info.aperture << ", (X,Y): (" << info.x << ", " << info.y << "), Type: " << info.type << ", Net: " << info.net << ", Source: " << info.source
+                 << ", Pin: " << info.pin;
     }
     return true;
 }
@@ -105,13 +106,13 @@ bool GCodeConverter::extractPadCoords()
 QString GCodeConverter::generateGcodeFromGerber()
 {
 
-    extractPadCoords();
+    extractPadInfo();
     QString gCode;
     gCode += "G21 ; Set units to millimeters\n";
     gCode += "G90 ; Absolute positioning\n";
 
 
-    for(const auto& coord : padCoords){
+    for(const auto& coord : padInfo){
         double x = coord.x;
         double y = coord.y;
         gCode += QString("G0 X%1 Y%2 ; Move to test point\n").arg(x).arg(y);

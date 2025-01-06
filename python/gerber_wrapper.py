@@ -17,7 +17,7 @@ class GerberWrapper:
     """
 
     def __init__(self):
-        logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+        logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
         self.project = None
         logging.debug("GerberWrapper initialized.")
 
@@ -140,7 +140,8 @@ class GerberWrapper:
         except Exception as e:
             logging.error(f"Failed to fetch bounding box. Exception: {e}")
             raise
-    def extractPadCoords(self):
+
+    def extractPadInfo(self):
         """
         Extracts pad coordinates from the copper layer Gerber file.
 
@@ -152,7 +153,7 @@ class GerberWrapper:
             return []
 
         try:
-            padCoords = []
+            padInfo = []
             copperFile = self.project.files[0]
             parsedFile = copperFile.parse()
             #logging.debug(f"Attribute of parsedFile: {dir(parsedFile)})
@@ -164,9 +165,8 @@ class GerberWrapper:
                     flashX = command.flash_point.x
                     flashY = command.flash_point.y
 
-                    # Debugging: Print type and attributes
-                    logging.debug(f"flashX: {flashX}, flashY: {flashY}")
-                    logging.debug(f"Type of flashX: {type(flashX)}, Type of flashY: {type(flashY)}")
+                    #logging.debug(f"flashX: {flashX}, flashY: {flashY}")
+                    #logging.debug(f"Type of flashX: {type(flashX)}, Type of flashY: {type(flashY)}")
                     try:
                         x = float(flashX.value)
                         y = float(flashY.value)
@@ -181,28 +181,94 @@ class GerberWrapper:
                         continue
 
                     aperture = command.aperture
-                    logging.debug(f"aperture: {aperture}")
-                    logging.debug(f"Type of aperture: {type(aperture)}")
-                    logging.debug(f"Aperture attributes: {dir(aperture)}")
+                    #logging.debug(f"aperture: {aperture}")
+                    #logging.debug(f"Type of aperture: {type(aperture)}")
+                    #logging.debug(f"Aperture attributes: {dir(aperture)}")
 
                     if hasattr(aperture, 'identifier'):
                         apertureCode = aperture.identifier
-                        logging.debug(f"Retrieved aperture code via 'identifier': {apertureCode}")
+                        #logging.debug(f"Retrieved aperture code via 'identifier': {apertureCode}")
                     else:
                         apertureCode = "Unknown"
                         logging.debug("Aperture code could not be retrieved. Set to 'Unknown'.")
-                    padInfo = {
+
+                    aperFunctionFull = "Unknown"
+                    if hasattr(aperture, 'attributes'):
+                        attributes = aperture.attributes
+                        #logging.debug(f"Aperture Attributes: {attributes}")
+
+                        if isinstance(attributes, ApertureAttributes):
+                            aperFunctionFull = attributes.get('.AperFunction', 'Unknown')
+                        else:
+                            aperFunctionFull = getattr(attributes, '.AperFunction', 'Unknown')
+                    else:
+                        logging.debug("No aperture attributes found. Using default 'Unknown' for AperFunction.")
+
+                    aperFunction = "Unknown"
+                    if aperFunctionFull != "Unknown":
+                        aperFunction = aperFunctionFull.split(',')[0].strip()
+
+                    net = "Unassigned"
+                    source = "Unknown"
+                    pinNumber = -1
+
+                    if hasattr(command, 'attributes'):
+                        cmd_attributes = command.attributes
+                        #logging.debug(f"Command attributes: {cmd_attributes}")
+
+                        if isinstance(cmd_attributes, ObjectAttributes):
+                            net = cmd_attributes.get('.N', 'Unassigned')
+                            p = cmd_attributes.get('.P', 'Unknown,Unknown')
+
+                            if isinstance(p, str):
+                                pParts = p.split(',')
+                                source = pParts[0].strip() if len(pParts) > 0 else 'Unknown'
+                                try:
+                                    pinNumber = int(pParts[1].strip()) if len(pParts) > 1 else -1
+                                except ValueError:
+                                    logging.error(f"Invalid PIN number format: '{pParts[1]}'")
+                                    pinNumber = -1
+                            else:
+                                logging.error(f"Unexpected type for '.P' attribute: {type(p)}")
+                        else:
+                            net = getattr(cmd_attributes, '.N', 'Unassigned')
+
+                            p = getattr(cmd_attributes, '.P', 'Unknown,Unknown')
+                            if isinstance(p, str):
+                                pParts = p.split(',')
+                                source = pParts[0].strip() if len(pParts) > 0 else 'Unknown'
+                                try:
+                                    pinNumber = int(pParts[1].strip()) if len(pParts) > 1 else -1
+                                except ValueError:
+                                    logging.error(f"Invalid PIN number format: '{pParts[1]}'")
+                                    pinNumber = -1
+                            else:
+                                logging.error(f"Unexpected type for '.P' attribute: {type(p)}")
+                    else:
+                        logging.debug("No command attributes found. Using default values for net, source, and PIN.")
+
+                    padAttributes = {
                         "x": x,
                         "y": y,
-                        "aperture": apertureCode
+                        "aperture": apertureCode,
+                        "type": aperFunction,
+                        "net": net,
+                        "source": source,
+                        "pin": pinNumber
                     }
-                    padCoords.append(padInfo)
-                    logging.debug(f"Pad found at X: {x}, Y: {y}, Aperture: {apertureCode}")
 
-            logging.debug(f"Extracted {len(padCoords)} pad coordinates.")
-            return padCoords
+                    padInfo.append(padAttributes)
+                    logging.info(f"Pad found at X: {x}, Y: {y}, Aperture: {apertureCode}, Type: {aperFunction}, Net: {net}, Source: {source}, PIN: {pinNumber}")
+                    #logging.debug(f"attributes: {attributes}")
+
+            logging.debug(f"Extracted {len(padInfo)} pad coordinates.")
+            return padInfo
 
         except Exception as e:
             logging.error(f"Failed to extract pad coordinates. Exception: {e}")
             raise
+
+
+
+
 

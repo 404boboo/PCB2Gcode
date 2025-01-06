@@ -7,7 +7,7 @@
 #include <QMap>
 
 
-struct TestPoint {
+struct TestPointCSV {
     QString sourceRefDes;
     QString sourcePad;
     QString net;
@@ -19,10 +19,14 @@ struct TestPoint {
     QString footprintSide;
 };
 
-struct PadInfo {
+struct TestPointGerber {
     double x;
     double y;
     std::string aperture;
+    std::string type;
+    std::string net;
+    std::string source;
+    int pin;
 };
 
 class GerberManager;
@@ -33,16 +37,16 @@ public:
     explicit GCodeConverter(GerberManager* gerberManager);
 
     bool loadCSVFile(const QString &filePath);
-    QList<TestPoint> filterTopSidePoints() const;
-    QMap<QString, QList<TestPoint>> groupByNet(const QList<TestPoint> &testPoints) const;
-    QString generateGCodeFromCSV(const QMap<QString, QList<TestPoint>> &groupedTestPoints) const;
+    QList<TestPointCSV> filterTopSidePoints() const;
+    QMap<QString, QList<TestPointCSV>> groupByNet(const QList<TestPointCSV> &testPoints) const;
+    QString generateGCodeFromCSV(const QMap<QString, QList<TestPointCSV>> &groupedTestPoints) const;
     bool saveGCodeToFile(const QString &filePath, const QString &gCodeContent);
-    bool extractPadCoords();
+    bool extractPadInfo();
     QString generateGcodeFromGerber();
 
 private:
-    QList<TestPoint> testPoints;
-    std::vector<PadInfo> padCoords;
+    QList<TestPointCSV> testPoints;
+    std::vector<TestPointGerber> padInfo;
     GerberManager* gerberManager;
 };
 

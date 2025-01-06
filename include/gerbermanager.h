@@ -23,10 +23,10 @@ public:
     bool loadGerberFiles(const QStringList& filePaths);
     void clearGerberFiles();
     QPixmap renderGerber(int dpmm=40);
-    QList<TestPoint> loadTestPoints(const QString& csvPath);
-    QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points);
+    QList<TestPointCSV> loadTestPoints(const QString& csvPath);
+    QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPointCSV>& points);
     void getBoundingBox();
-    std::vector<PadInfo> getPadCoordinates();
+    std::vector<TestPointGerber> getPadInfo();
 
 
 
@@ -37,7 +37,7 @@ private:
     std::string tempImagePath;
     GCodeConverter* gcodeConverter;
 
-    std::vector<PadInfo> padCoordinates;
+    std::vector<TestPointGerber> padInfo;
     // Bounding Box coords
     double minX;
     double minY;

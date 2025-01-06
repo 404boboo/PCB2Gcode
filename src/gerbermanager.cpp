@@ -105,7 +105,7 @@ QPixmap GerberManager::renderGerber(int dpmm) {
     }
 }
 
-QList<TestPoint> GerberManager::loadTestPoints(const QString& csvPath){
+QList<TestPointCSV> GerberManager::loadTestPoints(const QString& csvPath){
     if (gcodeConverter->loadCSVFile(csvPath)){
         return gcodeConverter->filterTopSidePoints();
     }
@@ -138,7 +138,7 @@ void GerberManager::getBoundingBox(){
     }
 }
 
-QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points){
+QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<TestPointCSV>& points){
     if (baseImage.isNull()){
         qDebug() << "Base image is null.";
         return baseImage;
@@ -191,26 +191,31 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
     return imageTestPoints;
 }
 
-std::vector<PadInfo> GerberManager::getPadCoordinates(){
+
+std::vector<TestPointGerber> GerberManager::getPadInfo(){
     try{
         py::gil_scoped_acquire acquire;
-        py::object extractPadCoords = gerberStack.attr("extractPadCoords");
-        py::object extractedCords = extractPadCoords();
-        std::vector<PadInfo> padCoords;
+        py::object extractPadInfo = gerberStack.attr("extractPadInfo");
+        py::object extractedInfo= extractPadInfo();
+        std::vector<TestPointGerber> padInfo;
 
-        if(py::isinstance<py::sequence>(extractedCords)){ // if returned object is iterable
-            for(auto item : extractedCords){
+        if(py::isinstance<py::sequence>(extractedInfo)){ // if returned object is iterable
+            for(auto item : extractedInfo){
                 if(py::isinstance<py::dict>(item)){
                     py::dict padDict = item.cast<py::dict>();
-                    PadInfo pad;
+                    TestPointGerber pad;
                     pad.x = padDict["x"].cast<double>();
                     pad.y = padDict["y"].cast<double>();
                     pad.aperture = padDict["aperture"].cast<std::string>();
-                    padCoords.emplace_back(pad);
+                    pad.type = padDict["type"].cast<std::string>();
+                    pad.net = padDict["net"].cast<std::string>();
+                    pad.source = padDict["source"].cast<std::string>();
+                    pad.pin = padDict["pin"].cast<int>();
+                    padInfo.emplace_back(pad);
                 }
             }
         }
-        return padCoords;
+        return padInfo;
 
     }
     catch(const py::error_already_set& e){
