@@ -27,13 +27,12 @@ bool GCodeConverter::loadCSVFile(const QString &filePath)
         QStringList parts = line.split(',');
 
         if (parts.size() != 9) continue;
-
         TestPoint tp;
         tp.source = parts[0].remove('"');
         tp.pin = parts[1].toInt();
         tp.net = parts[2].remove('"');
-        tp.x = parts[5].toDouble();
-        tp.y = parts[6].toDouble();
+        tp.x = parts[5].toDouble() - gerberManager->minX; // Subtracting boundBox o
+        tp.y = parts[6].toDouble() - gerberManager->minY;
         tp.type = parts[7].remove('"');
         testPointsCSV.append(tp);
     }

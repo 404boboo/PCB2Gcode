@@ -140,19 +140,19 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
     qDebug() << "Base image size: width = " << imageSize.width() << ", height =" << imageSize.height();
     qDebug() << "Bounding box: min_x = " << minX << ", min_y = " << minY << ", max_x = " << maxX << ", max_y = " << maxY;
 
-    double imageWidthMM = maxX-minX;
-    double imageHeightMM = maxX-minY;
+    double pcbbWidthMM = maxX - minX;
+    double pcbHeightMM = maxY - minY;
 
 
-    qDebug() << "PCB width in mm: " << imageWidthMM << ", height in mm: " << imageHeightMM;
+    qDebug() << "PCB width in mm: " << pcbbWidthMM << ", height in mm: " << pcbbWidthMM;
 
-    if (imageWidthMM <= 0 || imageHeightMM <= 0) {
+    if (pcbbWidthMM <= 0 || pcbHeightMM <= 0) {
         qDebug() << "Invalid bounding box dimensions.";
         return baseImage;
     }
 
-    double scaleX = imageSize.width() / imageWidthMM;
-    double scaleY = imageSize.height() / imageHeightMM;
+    double scaleX = imageSize.width() / pcbbWidthMM;
+    double scaleY = imageSize.height() / pcbHeightMM;
 
     qDebug() << "ScaleX: " << scaleX << ", ScaleY: " << scaleY;
 
@@ -165,12 +165,12 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
     QBrush brush(Qt::yellow);
     painter.setBrush(brush);
     for (const auto& tp : points) {
-        double scaledX = (tp.x - minX) * scaleX;
-        double scaledY = imageSize.height() - ((tp.y - minY) * scaleY);
+        double scaledX = (tp.x * scaleX); // Already subtracted minX and mixY from GerberWrapepr so we add them for rendering
+        double scaledY = imageSize.height() - (tp.y * scaleY) ;
         qDebug() << "Original coordinates (" << tp.x << "," << tp.y << ") scaled to: (" << scaledX << "," << scaledY << ")";
 
         if (scaledX < 0 || scaledX >= imageSize.width() || scaledY < 0 || scaledY >= imageSize.height()) {
-            qDebug() << "Point out of bounds: (" << scaledX << "," << scaledY << ")";
+            qDebug() << "Point out of bounds: (" << scaledX << "," << scaledY << "), Image Width: " << imageSize.width() << " Image Height: " << imageSize.height();
         }
         else {
             qDebug() << "Drawing point at scaled coordinates (" << scaledX << "," << scaledY << ")";
@@ -217,7 +217,7 @@ QList<TestPoint> GerberManager::getPadInfo(){
     }
 }
 
-QList<Trace> GerberManager::getTracesCoords(){
+QList<Trace> GerberManager::getTraceCoords(){
     try{
         py::gil_scoped_acquire acquire;
         py::object extractTraceCoords = GerberWrapper.attr("extractTraceCoords");

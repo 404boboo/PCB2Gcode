@@ -21,11 +21,17 @@ class GerberManager {
 public:
     GerberManager();
     ~GerberManager();
+    // PCB Bounding Box
+    double minX;
+    double minY;
+    double maxX;
+    double maxY;
+    void getBoundingBox();
 
     bool loadGerberFiles(const QStringList& filePaths);
     void clearGerberFiles();
     QPixmap renderGerber(int dpmm=40);
-    void getBoundingBox();
+
     QList<TestPoint> getPadInfo();
     QList<Trace> getTraceCoords();
     QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points);
@@ -37,10 +43,7 @@ private:
     std::string tempImagePath;
     GCodeConverter* gcodeConverter;
     // Bounding Box coords
-    double minX;
-    double minY;
-    double maxX;
-    double maxY;
+
 
 };
 
