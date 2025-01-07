@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QPainter>
+#include <QString>
 namespace py = pybind11;
 
 
@@ -105,15 +106,6 @@ QPixmap GerberManager::renderGerber(int dpmm) {
     }
 }
 
-QList<TestPointCSV> GerberManager::loadTestPoints(const QString& csvPath){
-    if (gcodeConverter->loadCSVFile(csvPath)){
-        return gcodeConverter->filterTopSidePoints();
-    }
-    else{
-        qDebug() << "Failed to laod test points from .csv. ";
-        return {};
-    }
-}
 void GerberManager::getBoundingBox(){
     try{
         py::gil_scoped_acquire aquire;
@@ -126,10 +118,10 @@ void GerberManager::getBoundingBox(){
         }
 
         // Extract bounding box values
-        minX = boundingBox["min_x"].cast<double>();
-        minY = boundingBox["min_y"].cast<double>();
-        maxX = boundingBox["max_x"].cast<double>();
-        maxY = boundingBox["max_y"].cast<double>();
+        minX = boundingBox["minX"].cast<double>();
+        minY = boundingBox["minY"].cast<double>();
+        maxX = boundingBox["maxX"].cast<double>();
+        maxY = boundingBox["maxY"].cast<double>();
 
         qDebug() << "Bounding Box: min_x=" << minX << " min_y=" << minY << " max_x=" << maxX << " max_y=" << maxY;
     }
@@ -138,7 +130,8 @@ void GerberManager::getBoundingBox(){
     }
 }
 
-QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<TestPointCSV>& points){
+QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points){
+
     if (baseImage.isNull()){
         qDebug() << "Base image is null.";
         return baseImage;
@@ -147,8 +140,8 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
     qDebug() << "Base image size: width = " << imageSize.width() << ", height =" << imageSize.height();
     qDebug() << "Bounding box: min_x = " << minX << ", min_y = " << minY << ", max_x = " << maxX << ", max_y = " << maxY;
 
-    double imageWidthMM = maxX - minX;
-    double imageHeightMM = maxY - minY;
+    double imageWidthMM = maxX-minX;
+    double imageHeightMM = maxX-minY;
 
 
     qDebug() << "PCB width in mm: " << imageWidthMM << ", height in mm: " << imageHeightMM;
@@ -192,24 +185,24 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
 }
 
 
-std::vector<TestPointGerber> GerberManager::getPadInfo(){
+QList<TestPoint> GerberManager::getPadInfo(){
     try{
         py::gil_scoped_acquire acquire;
         py::object extractPadInfo = gerberStack.attr("extractPadInfo");
         py::object extractedInfo= extractPadInfo();
-        std::vector<TestPointGerber> padInfo;
+        QList<TestPoint> padInfo;
 
         if(py::isinstance<py::sequence>(extractedInfo)){ // if returned object is iterable
             for(auto item : extractedInfo){
                 if(py::isinstance<py::dict>(item)){
                     py::dict padDict = item.cast<py::dict>();
-                    TestPointGerber pad;
+                    TestPoint pad;
                     pad.x = padDict["x"].cast<double>();
                     pad.y = padDict["y"].cast<double>();
-                    pad.aperture = padDict["aperture"].cast<std::string>();
-                    pad.type = padDict["type"].cast<std::string>();
-                    pad.net = padDict["net"].cast<std::string>();
-                    pad.source = padDict["source"].cast<std::string>();
+                    //pad.aperture = padDict["aperture"].cast<QString>();
+                    pad.type = QString::fromStdString(padDict["type"].cast<std::string>());
+                    pad.net = QString::fromStdString(padDict["net"].cast<std::string>());
+                    pad.source = QString::fromStdString(padDict["source"].cast<std::string>());
                     pad.pin = padDict["pin"].cast<int>();
                     padInfo.emplace_back(pad);
                 }

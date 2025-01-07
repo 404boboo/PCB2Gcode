@@ -13,6 +13,8 @@
 
 namespace py = pybind11;
 
+
+
 class GCodeConverter;
 
 class GerberManager {
@@ -23,12 +25,9 @@ public:
     bool loadGerberFiles(const QStringList& filePaths);
     void clearGerberFiles();
     QPixmap renderGerber(int dpmm=40);
-    QList<TestPointCSV> loadTestPoints(const QString& csvPath);
-    QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPointCSV>& points);
     void getBoundingBox();
-    std::vector<TestPointGerber> getPadInfo();
-
-
+    QList<TestPoint> getPadInfo();
+    QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points);
 
 
 
@@ -36,8 +35,6 @@ private:
     py::object gerberStack;
     std::string tempImagePath;
     GCodeConverter* gcodeConverter;
-
-    std::vector<TestPointGerber> padInfo;
     // Bounding Box coords
     double minX;
     double minY;

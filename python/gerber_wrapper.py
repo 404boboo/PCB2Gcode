@@ -156,6 +156,7 @@ class GerberWrapper:
             padInfo = []
             copperFile = self.project.files[0]
             parsedFile = copperFile.parse()
+            boundingBox = self.getBoundingBox()
             #logging.debug(f"Attribute of parsedFile: {dir(parsedFile)})
 
             for command in parsedFile._command_buffer.commands:
@@ -168,8 +169,8 @@ class GerberWrapper:
                     #logging.debug(f"flashX: {flashX}, flashY: {flashY}")
                     #logging.debug(f"Type of flashX: {type(flashX)}, Type of flashY: {type(flashY)}")
                     try:
-                        x = float(flashX.value)
-                        y = float(flashY.value)
+                        x = float(flashX.value)- boundingBox['minX']
+                        y = float(flashY.value)- boundingBox['minY']
                     except AttributeError as ae:
                         logging.error(f"Attribute error while extracting float from Offset: {ae}")
                         continue
