@@ -17,6 +17,13 @@ struct TestPoint{
 
 };
 
+struct Trace{
+    double startX;
+    double startY;
+    double endX;
+    double endY;
+};
+
 
 class GerberManager;
 
@@ -27,7 +34,6 @@ public:
 
     bool loadCSVFile(const QString &filePath);
     bool saveGCodeToFile(const QString &filePath, const QString &gCodeContent);
-    bool extractPadInfo();
     QList<TestPoint> getTestPointsCSV();
     QList<TestPoint> getTestPointsGerber();
     QMap<QString, QList<TestPoint>> groupByNet(const QList<TestPoint> &testPoints) const;
@@ -37,6 +43,7 @@ public:
 private:
     QList<TestPoint> testPointsCSV;
     QList<TestPoint> testPointsGerber;
+    QList<Trace> Traces;
     GerberManager* gerberManager;
 };
 

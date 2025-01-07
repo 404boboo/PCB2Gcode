@@ -27,12 +27,13 @@ public:
     QPixmap renderGerber(int dpmm=40);
     void getBoundingBox();
     QList<TestPoint> getPadInfo();
+    QList<Trace> getTraceCoords();
     QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points);
 
 
 
 private:
-    py::object gerberStack;
+    py::object GerberWrapper;
     std::string tempImagePath;
     GCodeConverter* gcodeConverter;
     // Bounding Box coords

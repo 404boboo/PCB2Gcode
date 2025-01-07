@@ -28,7 +28,7 @@ GerberManager::GerberManager() {
         py::module_ gerberWrapper = py::module_::import("gerber_wrapper");
 
         // Instantiate the GerberWrapper class
-        gerberStack  = gerberWrapper.attr("GerberWrapper")();
+        GerberWrapper  = gerberWrapper.attr("GerberWrapper")();
 
         PyGILState_Release(gstate);
     }
@@ -56,7 +56,7 @@ bool GerberManager::loadGerberFiles(const QStringList& filePaths) {
         for (const QString& path : filePaths) {
             py_file_paths.append(path.toStdString());
         }
-        gerberStack.attr("loadGerberFiles")(py_file_paths);
+        GerberWrapper.attr("loadGerberFiles")(py_file_paths);
         qDebug() << "Gerber files loaded successfully.";
         return true;
     }
@@ -68,7 +68,7 @@ bool GerberManager::loadGerberFiles(const QStringList& filePaths) {
 
 void GerberManager::clearGerberFiles() {
     try {
-        gerberStack.attr("clearGerberFiles")();
+        GerberWrapper.attr("clearGerberFiles")();
         qDebug() << "Cleared all loaded Gerber files.";
     } catch (const py::error_already_set& e) {
         qDebug() << "Python error while clearing Gerber files:" << QString::fromStdString(e.what());
@@ -79,7 +79,7 @@ QPixmap GerberManager::renderGerber(int dpmm) {
     try {
         py::gil_scoped_acquire acquire;
 
-        py::object pyRenderToPng = gerberStack.attr("renderToPng");
+        py::object pyRenderToPng = GerberWrapper.attr("renderToPng");
         std::string tempFilePath = pyRenderToPng(dpmm).cast<std::string>();
 
         if (tempFilePath.empty()) {
@@ -109,7 +109,7 @@ QPixmap GerberManager::renderGerber(int dpmm) {
 void GerberManager::getBoundingBox(){
     try{
         py::gil_scoped_acquire aquire;
-        py::object pyGetBoundingBox = gerberStack.attr("getBoundingBox");
+        py::object pyGetBoundingBox = GerberWrapper.attr("getBoundingBox");
         py::object boundingBox = pyGetBoundingBox();
 
         if (boundingBox.is_none()) {
@@ -188,7 +188,7 @@ QPixmap GerberManager::overlayTestPoints(const QPixmap& baseImage, const QList<T
 QList<TestPoint> GerberManager::getPadInfo(){
     try{
         py::gil_scoped_acquire acquire;
-        py::object extractPadInfo = gerberStack.attr("extractPadInfo");
+        py::object extractPadInfo = GerberWrapper.attr("extractPadInfo");
         py::object extractedInfo= extractPadInfo();
         QList<TestPoint> padInfo;
 
@@ -217,3 +217,33 @@ QList<TestPoint> GerberManager::getPadInfo(){
     }
 }
 
+QList<Trace> GerberManager::getTracesCoords(){
+    try{
+        py::gil_scoped_acquire acquire;
+        py::object extractTraceCoords = GerberWrapper.attr("extractTraceCoords");
+        py::object extractedCoords= extractTraceCoords();
+        QList<Trace> traceCoords;
+        if(py::isinstance<py::sequence>(extractedCoords)){
+            for(auto item : extractedCoords){
+                if(py::isinstance<py::dict>(item)){
+
+                    py::dict coordinate = item.cast<py::dict>();
+                    Trace trace;
+                    trace.startX = coordinate["startX"].cast<double>();
+                    trace.startY = coordinate["startY"].cast<double>();
+                    trace.endX = coordinate["endX"].cast<double>();
+                    trace.endY = coordinate["endY"].cast<double>();
+                    traceCoords.emplace_back(trace);
+                    qDebug() << "StartXY: (" << trace.startX << ", " << trace.startY << ") EndXY: (" << trace.endX << ", " << trace.endY << ")";
+                }
+            }
+        }
+        return traceCoords;
+    }
+    catch(const py::error_already_set& e){
+        qDebug() << "Python error while extracting trace coordinates: " << QString::fromStdString(e.what());
+        return {};
+        }
+
+
+}

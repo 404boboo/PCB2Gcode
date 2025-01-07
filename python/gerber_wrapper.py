@@ -9,7 +9,8 @@ from pygerber.common.rgba import RGBA
 from pygerber.gerberx3.parser2.attributes2 import ObjectAttributes, ApertureAttributes
 from pygerber.gerberx3.parser2.commands2 import command2
 from pygerber.gerberx3.parser2.commands2.flash2 import Flash2
-from pygerber.gerberx3.parser2.state2 import State2Constants
+from pygerber.gerberx3.parser2.commands2.line2 import Line2
+
 
 class GerberWrapper:
     """
@@ -169,8 +170,8 @@ class GerberWrapper:
                     #logging.debug(f"flashX: {flashX}, flashY: {flashY}")
                     #logging.debug(f"Type of flashX: {type(flashX)}, Type of flashY: {type(flashY)}")
                     try:
-                        x = float(flashX.value)- boundingBox['minX']
-                        y = float(flashY.value)- boundingBox['minY']
+                        x = float(flashX.value) - boundingBox['minX']
+                        y = float(flashY.value) - boundingBox['minY']
                     except AttributeError as ae:
                         logging.error(f"Attribute error while extracting float from Offset: {ae}")
                         continue
@@ -269,7 +270,50 @@ class GerberWrapper:
             logging.error(f"Failed to extract pad coordinates. Exception: {e}")
             raise
 
+    def extractTraceCoords(self):
+        """
+        Extracts trace locations and their nets from the copper layer gerber file.
 
+        Returns:
+            A list of dicts containing trave start and end coordinates with their nets.
+        """
+
+        if not self.project:
+            logging.warning("No Gerber file found to extract traces.")
+            return[]
+        try:
+            traces = []
+            copperFile = self.project.files[0]
+            parsedFile = copperFile.parse()
+            boundingBox = self.getBoundingBox()
+
+            for command in parsedFile._command_buffer.commands:
+                if isinstance(command, Line2):
+                    startX = command.start_point.x
+                    endX = command.end_point.x
+                    startY = command.start_point.y
+                    endY = command.end_point.y
+                    logging.debug(f"startX: {startX}, startY: {startY}")
+                    logging.debug(f"endX: {endX}, endY: {endY}")
+
+                    startX = float(startX.value) - boundingBox['minX']
+                    startY = float(startY.value) - boundingBox['minY']
+                    endX = float(endX.value) - boundingBox['minX']
+                    endY = float(endY.value) - boundingBox['minY']
+
+                    trace = {
+                        "startX" : startX,
+                        "startY" : startY,
+                        "endX" : endX,
+                        "endY" : endY
+                        }
+
+                    traces.append(trace)
+                    logging.debug(f"Trace found starting ({startX}, {startY}) ending: ({endX}, {endY})")
+            return traces
+        except Exception as e:
+            logging.error("Failed to extract traces. Exception: {e}")
+            raise
 
 
 

@@ -285,7 +285,7 @@ void PCB2Gcode::onGenerateFromGerber(){
     }
     QMap<QString, QList<TestPoint>> groupedTestPoints = gcodeConverter->groupByNet(testPoints);
     QString gCode = gcodeConverter->generateGCode(groupedTestPoints);
-
+    gerberManager->getTraceCoords();
     QString savePath = QFileDialog::getSaveFileName(this, tr("Save G-Code File"), "", tr("G-Code Files (*.gcode)"));
     if (savePath.isEmpty()) {
         return;
@@ -296,6 +296,8 @@ void PCB2Gcode::onGenerateFromGerber(){
     } else {
         QMessageBox::information(this, tr("Success"), tr("G-code generated and saved successfully."));
     }
+
+
 }
 
 
