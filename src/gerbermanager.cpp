@@ -233,8 +233,9 @@ QList<Trace> GerberManager::getTraceCoords(){
                     trace.startY = coordinate["startY"].cast<double>();
                     trace.endX = coordinate["endX"].cast<double>();
                     trace.endY = coordinate["endY"].cast<double>();
+                    trace.net = QString::fromStdString(coordinate["net"].cast<std::string>());
                     traceCoords.emplace_back(trace);
-                    qDebug() << "StartXY: (" << trace.startX << ", " << trace.startY << ") EndXY: (" << trace.endX << ", " << trace.endY << ")";
+                    qDebug() << "StartXY: (" << trace.startX << ", " << trace.startY << ") EndXY: (" << trace.endX << ", " << trace.endY << "), Net: " << trace.net;
                 }
             }
         }

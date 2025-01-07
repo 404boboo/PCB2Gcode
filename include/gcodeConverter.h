@@ -22,7 +22,10 @@ struct Trace{
     double startY;
     double endX;
     double endY;
+    QString net;
 };
+
+
 
 
 class GerberManager;

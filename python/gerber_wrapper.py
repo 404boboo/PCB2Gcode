@@ -218,9 +218,9 @@ class GerberWrapper:
                         cmd_attributes = command.attributes
                         #logging.debug(f"Command attributes: {cmd_attributes}")
 
-                        if isinstance(cmd_attributes, ObjectAttributes):
-                            net = cmd_attributes.get('.N', 'Unassigned')
-                            p = cmd_attributes.get('.P', 'Unknown,Unknown')
+                        if isinstance(command.attributes, ObjectAttributes):
+                            net = command.attributes.get('.N', 'Unassigned')
+                            p = command.attributes.get('.P', 'Unknown,Unknown')
 
                             if isinstance(p, str):
                                 pParts = p.split(',')
@@ -233,9 +233,9 @@ class GerberWrapper:
                             else:
                                 logging.error(f"Unexpected type for '.P' attribute: {type(p)}")
                         else:
-                            net = getattr(cmd_attributes, '.N', 'Unassigned')
+                            net = getattr(command.attributes, '.N', 'Unassigned')
 
-                            p = getattr(cmd_attributes, '.P', 'Unknown,Unknown')
+                            p = getattr(command.attributes, '.P', 'Unknown,Unknown')
                             if isinstance(p, str):
                                 pParts = p.split(',')
                                 source = pParts[0].strip() if len(pParts) > 0 else 'Unknown'
@@ -300,16 +300,18 @@ class GerberWrapper:
                     startY = float(startY.value) - boundingBox['minY']
                     endX = float(endX.value) - boundingBox['minX']
                     endY = float(endY.value) - boundingBox['minY']
-
+                    if isinstance(command.attributes, ObjectAttributes):
+                        net = command.attributes.get('.N', 'Unassigned')
                     trace = {
                         "startX" : startX,
                         "startY" : startY,
                         "endX" : endX,
-                        "endY" : endY
+                        "endY" : endY,
+                        "net" : net
                         }
 
                     traces.append(trace)
-                    logging.debug(f"Trace found starting ({startX}, {startY}) ending: ({endX}, {endY})")
+                    logging.debug(f"Trace found starting ({startX}, {startY}), Ending: ({endX}, {endY}), Net: {net}")
             return traces
         except Exception as e:
             logging.error("Failed to extract traces. Exception: {e}")
