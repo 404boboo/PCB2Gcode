@@ -219,12 +219,24 @@ void PCB2Gcode::onPreviewTestPoints(){
 
 void PCB2Gcode::onGenerateFromCSV(){
     QString testPointsFile = ui->testPointsPath->text();
+    QStringList copperFile = { ui->copperPath->text() };
+
     if (testPointsFile.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Please select a test points file."));
         return;
     }
 
+    if (copperFile.isEmpty()) {
+        QMessageBox::critical(this, tr("Error"), tr("Please select a test points file."));
+        return;
+    }
+
     if (!gcodeConverter->loadCSVFile(testPointsFile)) {
+        QMessageBox::critical(this, tr("Error"), tr("Failed to load test points file. Please check the file format."));
+        return;
+    }
+
+    if (!gerberManager->loadGerberFiles(copperFile)) {
         QMessageBox::critical(this, tr("Error"), tr("Failed to load test points file. Please check the file format."));
         return;
     }
@@ -242,6 +254,8 @@ void PCB2Gcode::onGenerateFromCSV(){
         return;
     }
 
+
+    gerberManager->getTraceCoords();
     QString gCode = gcodeConverter->generateGCode(groupedPoints);
     if (gCode.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Failed to generate G-Code."));

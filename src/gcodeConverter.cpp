@@ -1,3 +1,29 @@
+/*
+
+PCB2Gcode - A Flying Probe Tester Application
+Copyright (c) 2024 Ahmed Bouras
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+*/
+
+
 #include "include/gcodeConverter.h"
 #include "include/gerbermanager.h"
 #include <QFile>
@@ -63,16 +89,23 @@ QString GCodeConverter::generateGCode(const QMap<QString, QList<TestPoint>>& gro
 {
 
     QString gCode;
-    gCode += "G21 ; Set units to millimeters\n";
-    gCode += "G90 ; Absolute positioning\n";
 
     for (const QString &net : groupedTestPoints.keys()) {
         gCode += QString("; Net: %1\n").arg(net);
+        const QList<TestPoint>& testPoints = groupedTestPoints[net];
+        for(int i = 0; i < testPoints.size() - 1; i += 2){
+            // Probe 1
+            gCode += QString("G0 P1 X%1 Y%2 Z1 ;\n").arg(testPoints[i].x).arg(testPoints[i].y);
 
-        for (const TestPoint &tp : groupedTestPoints[net]) {
-            gCode += QString("G0 X%1 Y%2 ; Move to test point\n").arg(tp.x).arg(tp.y);
-            gCode += "G1 Z-1 ; Lower probe\n";
-            gCode += "G1 Z1 ; Raise probe\n";
+            // Probe 2
+            gCode += QString("G0 P2 X%1 Y%2 Z1 ;\n").arg(testPoints[i+1].x).arg(testPoints[i+1].y);
+
+            // Prefrom test
+            gCode += "T1 ;\n";
+
+            // Retract
+            gCode += "G0 P1 Z0 ;\n";
+            gCode += "G0 P2 Z0 ;\n";
         }
     }
 
