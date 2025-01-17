@@ -28,7 +28,6 @@ import logging
 import tempfile
 from pathlib import Path
 from pygerber.gerberx3.api.v2 import GerberFile, Project, FileTypeEnum
-from pygerber.backend.rasterized_2d.color_scheme import ColorScheme
 from pygerber.gerberx3.api._v2 import ImageFormatEnum, PixelFormatEnum
 from pygerber.common.rgba import RGBA
 
@@ -342,6 +341,5 @@ class GerberWrapper:
         except Exception as e:
             logging.error("Failed to extract traces. Exception: {e}")
             raise
-
 
 
