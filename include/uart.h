@@ -46,6 +46,12 @@ public:
     QStringList availablePorts() const;
     bool isConnected() const;
     void sendData(const QByteArray &data);
+    void setIRUN(int irunValue, QString &driverID);
+    void setIHOLD(int iholdValue, QString &driverID);
+    void setSendDelay(int sendDelay, QString &driverID);
+    void setChopperMode(const QString &mode, QString &driverID);
+    void setMicrostepping(const QString &microstepping, QString &driverID);
+    void setVREF(double vrefValue, QString &driverID);
 
 Q_SIGNALS:
     void connectionStatusChanged(bool Connected);

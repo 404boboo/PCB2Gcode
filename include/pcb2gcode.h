@@ -79,6 +79,7 @@ private Q_SLOTS:
     void onSaveImage();
     void enableToolBar();
     void keyPressEvent(QKeyEvent *event);
+    QString getSelectedDriverID();
 
 
 private:

@@ -399,9 +399,22 @@ void PCB2Gcode::onSaveImage(){
     }
 }
 
+QString PCB2Gcode::getSelectedDriverID()
+{
+    QString selectedDriverID = ui->driverIDComboBox->currentText();
+
+    if (selectedDriverID.isEmpty()) {
+        QMessageBox::warning(this, "Driver ID Missing", "Please select a Driver ID before proceeding.");
+    }
+
+    QString driverID = selectedDriverID.split(" ").first(); // take the first part (the number)
+    return driverID;
+}
 
 void PCB2Gcode::initUART()
 {
+    // UART connection
+
     connect(uart, &UART::connectionStatusChanged, this, [=](bool connected) {
         if (connected)
             QMessageBox::information(this, "Connection", "Connected successfully.");
@@ -410,19 +423,86 @@ void PCB2Gcode::initUART()
     });
 
     connect(ui->refreshButton, &QPushButton::clicked, this, [=]() {
-        ui->comPortcomboBox->clear();
-        ui->comPortcomboBox->addItems(uart->availablePorts());
+        ui->comPortComboBox->clear();
+        ui->comPortComboBox->addItems(uart->availablePorts());
     });
 
-    connect(ui->connectionButton, &QPushButton::clicked, this, [=]() {
+    connect(ui->connectButton, &QPushButton::clicked, this, [=]() {
         if (uart->isConnected()) {
             uart->disconnectPort();
-            ui->connectionButton->setText("Connect");
+            ui->connectButton->setText("Connect");
         } else {
-            QString portName = ui->comPortcomboBox->currentText();
+            QString portName = ui->comPortComboBox->currentText();
             if (uart->connectPort(portName))
-                ui->connectionButton->setText("Disconnect");
+                ui->connectButton->setText("Disconnect");
         }
+    });
+    // UART COM PORTS
+    ui->comPortComboBox->addItems(uart->availablePorts());
+
+    // Driver IDs
+    ui->driverIDComboBox->clear();
+    QStringList driverIDs = {"0 (X1)", "1 (Y1)", "2 (X2)", "3 (Y2)"};
+    ui->driverIDComboBox->addItems(driverIDs);
+    connect(ui->driverIDComboBox, &QComboBox::currentTextChanged, this, [=](const QString &driverID) {
+        qDebug() << "Driver ID selected:" << driverID;
+    });
+
+    // SET buttons
+
+    // SET IRUN button
+    connect(ui->irunButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        int irunValue = ui->IRUNSpinBox->value();
+        uart->setIRUN(irunValue, driverID);
+    });
+
+    // SET IHOLD button
+    connect(ui->iholdButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        int iholdValue = ui->IHOLDSpinBox->value();
+        uart->setIHOLD(iholdValue, driverID);
+    });
+
+    // SET SendDelay button
+    connect(ui->sendDelayButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        int sendDelay = ui->sendDelaySpinBox->value();
+        uart->setSendDelay(sendDelay, driverID);
+    });
+
+    // SET chopper mode button
+    connect(ui->chopperModeButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        QString chopperMode = ui->chopperModeComboBox->currentText();
+        QString chopperID = chopperMode.split(" ").first();
+        uart->setChopperMode(chopperMode, driverID);
+    });
+
+    // SET microstepping button
+    connect(ui->microsteppingButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        QString microstepping = ui->microsteppingComboBox->currentText();
+        uart->setMicrostepping(microstepping, driverID);
+    });
+
+    // SET VREF button
+    connect(ui->vrefButton, &QPushButton::clicked, this, [=]() {
+        QString driverID = getSelectedDriverID();
+        if (driverID.isEmpty()) return;
+
+        double vrefValue = ui->changeVrefSpinBox->value();
+        uart->setVREF(vrefValue, driverID);
     });
 
 }

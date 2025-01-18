@@ -62,9 +62,14 @@ bool UART::connectPort(const QString &portName)
     return false;
 }
 
+bool UART::isConnected() const
+{
+    return serialPort->isOpen();
+}
+
 void UART::disconnectPort()
 {
-    if (serialPort->isOpen()) {
+    if (isConnected()) {
         serialPort->close();
         emit connectionStatusChanged(false);
     }
@@ -79,13 +84,81 @@ QStringList UART::availablePorts() const
     return ports;
 }
 
-bool UART::isConnected() const
-{
-    return serialPort->isOpen();
-}
-
 void UART::sendData(const QByteArray &data)
 {
-    if (serialPort->isOpen())
+    if (isConnected())
         serialPort->write(data);
 }
+
+
+void UART::setIRUN(int irunValue, QString &driverID)
+{
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " IRUN " + QByteArray::number(irunValue) + "\r\n";
+        sendData(command);
+        qDebug() << "IRUN value set to:" << irunValue;
+    } else {
+        qWarning() << "Failed to set IRUN. Serial port not open.";
+    }
+}
+
+void UART::setIHOLD(int iholdValue, QString &driverID)
+{
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " IHOLD " + QByteArray::number(iholdValue) + "\r\n";
+        sendData(command);
+        qDebug() << "IHOLD value set to:" << iholdValue;
+    } else {
+        qWarning() << "Failed to set IHOLD. Serial port not open.";
+    }
+}
+void UART::setSendDelay(int sendDelay, QString &driverID)
+{
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " SENDDELAY " + QByteArray::number(sendDelay) + "\r\n";
+        sendData(command);
+        qDebug() << "Send delay set to:" << sendDelay;
+    } else {
+        qWarning() << "Failed to set Send Delay. Serial port not open.";
+    }
+}
+
+void UART::setChopperMode(const QString &mode, QString &driverID)
+{
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " CHOPPER " + mode.toUtf8() + "\r\n";
+        sendData(command);
+        qDebug() << "Chopper mode set to:" << mode;
+    } else {
+        qWarning() << "Failed to set Chopper Mode. Serial port not open.";
+    }
+}
+
+void UART::setMicrostepping(const QString &microstepping, QString &driverID)
+{
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " MICROSTEP " + microstepping.toUtf8() + "\r\n";
+        sendData(command);
+        qDebug() << "Microstepping set to:" << microstepping;
+    } else {
+        qWarning() << "Failed to set Microstepping. Serial port not open.";
+    }
+}
+
+void UART::setVREF(double vrefValue, QString &driverID)
+{
+    if (vrefValue <= 0.0 || vrefValue >= 2.5) {
+        qWarning() << "Invalid VREF: Must be between 0.0V and 2.5V.";
+        return;
+    }
+
+    if (isConnected()) {
+        QByteArray command = "SET DRIVER " + driverID.toUtf8() + " VREF " + QByteArray::number(vrefValue, 'f', 3) + "\r\n";
+        sendData(command);
+        qDebug() << "VREF set to:" << vrefValue << "V";
+    } else {
+        qWarning() << "Failed to set VREF. Serial port not open.";
+    }
+}
+
+
