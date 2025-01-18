@@ -86,8 +86,31 @@ QStringList UART::availablePorts() const
 
 void UART::sendData(const QByteArray &data)
 {
-    if (isConnected())
-        serialPort->write(data);
+    if (serialPort->isOpen()) {
+        qint64 bytesWritten = serialPort->write(data);
+        if (bytesWritten == -1) {
+            qWarning() << "Failed to write to port" << serialPort->portName() << ", error:" << serialPort->errorString();
+        } else if (bytesWritten != data.size()) {
+            qWarning() << "Failed to write all bytes to port" << serialPort->portName();
+        } else {
+            emit dataSent(data); // Emit the sent data signal
+            qDebug() << "Sent:" << data;
+        }
+
+        // Flush to ensure data is sent immediately
+        if (!serialPort->flush()) {
+            qWarning() << "Failed to flush data to port" << serialPort->portName();
+        }
+    } else {
+        qWarning() << "Attempted to send data, but serial port is not open.";
+    }
+}
+
+void UART::handleReadyRead()
+{
+    QByteArray data = serialPort->readAll();
+    emit dataReceived(data);
+    qDebug() << "Received:" << data;
 }
 
 

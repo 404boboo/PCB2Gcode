@@ -45,7 +45,6 @@ public:
     void disconnectPort();
     QStringList availablePorts() const;
     bool isConnected() const;
-    void sendData(const QByteArray &data);
     void setIRUN(int irunValue, QString &driverID);
     void setIHOLD(int iholdValue, QString &driverID);
     void setSendDelay(int sendDelay, QString &driverID);
@@ -53,12 +52,15 @@ public:
     void setMicrostepping(const QString &microstepping, QString &driverID);
     void setVREF(double vrefValue, QString &driverID);
 
-Q_SIGNALS:
+signals:
     void connectionStatusChanged(bool Connected);
     void dataReceived(const QByteArray &data);
+    void dataSent(const QByteArray &data);
 
 private:
     QSerialPort *serialPort;
+    void sendData(const QByteArray &data);
+    void handleReadyRead();
 };
 
 #endif // UART_H

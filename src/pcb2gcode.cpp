@@ -399,6 +399,8 @@ void PCB2Gcode::onSaveImage(){
     }
 }
 
+//// UART ////
+
 QString PCB2Gcode::getSelectedDriverID()
 {
     QString selectedDriverID = ui->driverIDComboBox->currentText();
@@ -439,6 +441,24 @@ void PCB2Gcode::initUART()
     });
     // UART COM PORTS
     ui->comPortComboBox->addItems(uart->availablePorts());
+    /// Commands Logger ///
+
+    // Handle incoming data
+    connect(uart, &UART::dataReceived, this, [=](const QByteArray &data) {
+        QString response = QString::fromUtf8(data);
+        ui->recieveLogtextEdit->append("Received: " + response);
+    });
+
+    // Handle sent data
+    connect(uart, &UART::dataSent, this, [=](const QByteArray &data) {
+        QString sentCommand = QString::fromUtf8(data).trimmed();
+        ui->sentLogtextEdit->append("Sent: " + sentCommand);
+    });
+    // Clear button
+    connect(ui->clearLogsButton, &QPushButton::clicked, this, [=]() {
+        ui->sentLogtextEdit->clear();
+        ui->recieveLogtextEdit->clear();
+    });
 
     // Driver IDs
     ui->driverIDComboBox->clear();
