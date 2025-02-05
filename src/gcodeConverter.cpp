@@ -88,7 +88,12 @@ QMap<QString, QList<TestPoint>> GCodeConverter::groupByNet(const QList<TestPoint
 QString GCodeConverter::generateGCode(const QMap<QString, QList<TestPoint>>& groupedTestPoints) const
 {
 
+    double pcbbWidthMM = gerberManager->maxX - gerberManager->minX;
+    double pcbHeightMM = gerberManager->maxY - gerberManager->minY;
     QString gCode;
+    gCode += QString("; G54 %1 %2\n")
+                 .arg(pcbbWidthMM)
+                 .arg(pcbHeightMM);
 
     for (const QString &net : groupedTestPoints.keys()) {
         gCode += QString("; Net: %1\n").arg(net);
