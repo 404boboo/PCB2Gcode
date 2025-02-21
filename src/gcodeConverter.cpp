@@ -87,11 +87,11 @@ QMap<QString, QList<TestPoint>> GCodeConverter::groupByNet(const QList<TestPoint
 
 QString GCodeConverter::generateGCode(const QMap<QString, QList<TestPoint>>& groupedTestPoints) const
 {
-
+    gerberManager->getBoundingBox();
     double pcbbWidthMM = gerberManager->maxX - gerberManager->minX;
     double pcbHeightMM = gerberManager->maxY - gerberManager->minY;
     QString gCode;
-    gCode += QString("; G54 %1 %2\n")
+    gCode += QString("; G54 X%1 Y%2\n")
                  .arg(pcbbWidthMM)
                  .arg(pcbHeightMM);
 
@@ -100,10 +100,10 @@ QString GCodeConverter::generateGCode(const QMap<QString, QList<TestPoint>>& gro
         const QList<TestPoint>& testPoints = groupedTestPoints[net];
         for(int i = 0; i < testPoints.size() - 1; i += 2){
             // Probe 1
-            gCode += QString("G0 P1 X%1 Y%2 Z1 ;\n").arg(testPoints[i].x).arg(testPoints[i].y);
+            gCode += QString("G0 P1 X%1 Y%2;\n").arg(testPoints[i].x).arg(testPoints[i].y);
 
             // Probe 2
-            gCode += QString("G0 P2 X%1 Y%2 Z1 ;\n").arg(testPoints[i+1].x).arg(testPoints[i+1].y);
+            gCode += QString("G0 P2 X%1 Y%2;\n").arg(testPoints[i+1].x).arg(testPoints[i+1].y);
 
             // Prefrom test
             gCode += "T1 ;\n";
