@@ -24,7 +24,6 @@ SOFTWARE.
 */
 
 
-
 #ifndef GERBERMANAGER_H
 #define GERBERMANAGER_H
 #undef slots
@@ -54,11 +53,9 @@ public:
     double maxX;
     double maxY;
     void getBoundingBox();
-
     bool loadGerberFiles(const QStringList& filePaths);
     void clearGerberFiles();
     QPixmap renderGerber(int dpmm=40);
-
     QList<TestPoint> getPadInfo();
     QList<Trace> getTraceCoords();
     QPixmap overlayTestPoints(const QPixmap& baseImage, const QList<TestPoint>& points);

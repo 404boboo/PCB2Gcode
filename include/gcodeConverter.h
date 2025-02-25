@@ -31,6 +31,8 @@ SOFTWARE.
 #include <QString>
 #include <QList>
 #include <QMap>
+#include <cmath>
+#include <QPointF>
 
 
 struct TestPoint{
@@ -49,9 +51,8 @@ struct Trace{
     double endX;
     double endY;
     QString net;
+
 };
-
-
 
 
 class GerberManager;
@@ -67,7 +68,19 @@ public:
     QList<TestPoint> getTestPointsGerber();
     QMap<QString, QList<TestPoint>> groupByNet(const QList<TestPoint> &testPoints) const;
     QString generateGCode(const QMap<QString, QList<TestPoint>> &groupedTestPoints) const;
-
+    QMap<QString, QPair<QList<TestPoint>, QList<TestPoint>>>divideTestPointsForProbes(const QMap<QString, QList<TestPoint>>& groupedTestPoints) const;
+    QMap<QString, QList<TestPoint>>prioritizeEdgesAndSingleTracePoints(const QList<TestPoint> &testPoints) const;
+    int calculateTotalDistance(const TestPoint& lowerProbePosition,
+                               const TestPoint& upperProbePosition,
+                               const QList<TestPoint>& netTestPoints) const;
+    QString selectNextNet( const QMap<QString, QPair<QList<TestPoint>, QList<TestPoint>>>& dividedTestPoints,
+                          const QList<QString>& remainingNets,
+                          const QPointF& lowerProbePos,
+                          const QPointF& upperProbePos) const;
+    void assignPointsByMinimizingLocalMaximum(
+        const TestPoint& probe1, const TestPoint& probe2,
+        const QList<TestPoint>& edgePoints,
+        QList<TestPoint>& upperProbePoints, QList<TestPoint>& lowerProbePoints) const;
 
 private:
     QList<TestPoint> testPointsCSV;

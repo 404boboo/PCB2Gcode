@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 #include "include/gerbermanager.h"
+#include "qapplication.h"
 #include <QDebug>
 #include <QFile>
 #include <QPainter>
@@ -43,8 +44,9 @@ GerberManager::GerberManager() {
         qDebug() << "Python executable:" << QString::fromStdString(sys.attr("executable").cast<std::string>());
 
         // Set the PYTHONPATH environment in Python
+        std::string scriptPath = QApplication::applicationDirPath().toStdString() + "/python/gerber_wrapper.py";
         py::list path = sys.attr("path");
-        path.append("C:/Users/ahmed/OneDrive/Desktop/Projects/PCB2Gcode/python"); // 'gerber_wrapper.py' directory
+        path.append(scriptPath); // 'gerber_wrapper.py' directory
 
         // Log modified Python path
         qDebug() << "Python path after appending:" << QString::fromStdString(py::str(path).cast<std::string>());
@@ -269,7 +271,7 @@ QList<Trace> GerberManager::getTraceCoords(){
     catch(const py::error_already_set& e){
         qDebug() << "Python error while extracting trace coordinates: " << QString::fromStdString(e.what());
         return {};
-        }
+    }
 
 
 }

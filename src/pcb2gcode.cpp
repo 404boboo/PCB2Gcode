@@ -246,6 +246,7 @@ void PCB2Gcode::onPreviewTestPoints(){
 void PCB2Gcode::onGenerateFromCSV(){
     QString testPointsFile = ui->testPointsPath->text();
     QStringList copperFile = { ui->copperPath->text() };
+    gerberManager->getBoundingBox();
 
     if (testPointsFile.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("Please select a test points file."));
@@ -273,7 +274,7 @@ void PCB2Gcode::onGenerateFromCSV(){
         QMessageBox::critical(this, tr("Error"), tr("No test points found in the CSV file."));
         return;
     }
-    QMap<QString, QList<TestPoint>> groupedPoints = gcodeConverter->groupByNet(csvTestPoints);
+    QMap<QString, QList<TestPoint>> groupedPoints = gcodeConverter->prioritizeEdgesAndSingleTracePoints(csvTestPoints);
 
     if (groupedPoints.isEmpty()) {
         QMessageBox::critical(this, tr("Error"), tr("No nets found in the test points."));
@@ -323,7 +324,7 @@ void PCB2Gcode::onGenerateFromGerber(){
         QMessageBox::critical(this, tr("Error"), tr("No pad infromation found."));
         return;
     }
-    QMap<QString, QList<TestPoint>> groupedTestPoints = gcodeConverter->groupByNet(testPoints);
+    QMap<QString, QList<TestPoint>> groupedTestPoints = gcodeConverter->prioritizeEdgesAndSingleTracePoints(testPoints);
     QString gCode = gcodeConverter->generateGCode(groupedTestPoints);
     gerberManager->getTraceCoords();
     QString savePath = QFileDialog::getSaveFileName(this, tr("Save G-Code File"), "", tr("G-Code Files (*.gcode)"));
@@ -336,7 +337,6 @@ void PCB2Gcode::onGenerateFromGerber(){
     } else {
         QMessageBox::information(this, tr("Success"), tr("G-code generated and saved successfully."));
     }
-
 
 }
 
